@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1a237e" />
+    <meta name="description" content="EduVerse.AI — AI-Powered Learning Management System" />
+    <title>EduVerse.AI</title>
+
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body, #root { height: 100%; }
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: #f4f6fb;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Vite loading splash */
+      #splash {
+        display: flex; align-items: center; justify-content: center;
+        position: fixed; inset: 0; background: #f4f6fb; z-index: 9999;
+        transition: opacity .3s;
+      }
+      #splash.hidden { opacity: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Vite entry point -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
