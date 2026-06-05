@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # ─── Firebase Service Account Key ─────────────────────────────
 # NEVER commit this file to Git
 serviceAccountKey.json
@@ -25,11 +25,4 @@ logs/
 # ─── OS ────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
-=======
-.env
-.env.local
-.env.production
-node_modules/
-dist/
-.DS_Store
->>>>>>> 30c4da64c42faa392b769f2f7be775f12ccc86f4
+
