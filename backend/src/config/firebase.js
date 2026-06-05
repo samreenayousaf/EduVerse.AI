@@ -1,22 +1,32 @@
 const admin = require('firebase-admin');
-const path = require('path');
 require('dotenv').config();
 
 const initFirebase = () => {
   if (admin.apps.length > 0) return admin.apps[0];
 
-  const keyPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-  if (!keyPath) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_PATH not set in .env');
-  }
-
   let serviceAccount;
-  try {
-    serviceAccount = require(path.resolve(keyPath));
-  } catch (e) {
-    throw new Error(
-      `Cannot find serviceAccountKey.json at: ${path.resolve(keyPath)}`
-    );
+
+  // Production (Render) - environment variable se
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (e) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT env variable invalid JSON hai');
+    }
+  }
+  // Development (Local) - file se
+  else if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
+    const path = require('path');
+    try {
+      serviceAccount = require(path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT_PATH));
+    } catch (e) {
+      throw new Error(
+        `Cannot find serviceAccountKey.json at: ${path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT_PATH)}`
+      );
+    }
+  }
+  else {
+    throw new Error('Firebase credentials not set. FIREBASE_SERVICE_ACCOUNT ya FIREBASE_SERVICE_ACCOUNT_PATH chahiye.');
   }
 
   admin.initializeApp({
@@ -24,7 +34,7 @@ const initFirebase = () => {
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
   });
 
-  console.log(`Firebase Admin connected → ${serviceAccount.project_id}`);
+  console.log(`✅ Firebase Admin connected → ${serviceAccount.project_id}`);
   return admin.app();
 };
 
