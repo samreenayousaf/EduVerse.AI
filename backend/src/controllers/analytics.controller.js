@@ -77,13 +77,13 @@ exports.getInstructorAnalytics = async (req, res) => {
       };
     }).filter(c => c.score !== null); // only courses with graded data
 
-    // ── Students by course (for pie chart) ────────────────────────────────
+    // ── Students by course (for pie chart) ──
     const studentsByCourse = courses.map(course => ({
       name: course.title.length > 14 ? course.title.substring(0, 14) + '…' : course.title,
       value: enrollments.filter(e => e.courseId.toString() === course._id.toString()).length,
     })).filter(c => c.value > 0);
 
-    // ── Monthly enrollments (last 6 months) ────────────────────────────────
+    // ── Monthly enrollments (last 6 months) ───
     const now      = new Date();
     const months   = [];
     for (let i = 5; i >= 0; i--) {
@@ -102,7 +102,7 @@ exports.getInstructorAnalytics = async (req, res) => {
     });
     const monthlyEnroll = months.map(({ month, count }) => ({ month, count }));
 
-    // ── Top students (by avg grade across all instructor's courses) ─────────
+    // ── Top students 
     const studentMap = {};
     assignments.forEach(a => {
       a.submissions.forEach(s => {
@@ -138,12 +138,12 @@ exports.getInstructorAnalytics = async (req, res) => {
         .slice(0, 6)
     );
 
-    // ── Completion rate ────────────────────────────────────────────────────
+    // ── Completion rate ──
     const completionRate = enrollments.length
       ? Math.round(enrollments.filter(e => e.status === 'completed').length / enrollments.length * 100)
       : 0;
 
-    // ── Avg grade overall ──────────────────────────────────────────────────
+    // ── Avg grade overall ──
     const allGrades = assignments.flatMap(a =>
       a.submissions.filter(s => s.grade !== null && s.grade !== undefined).map(s => s.grade)
     );

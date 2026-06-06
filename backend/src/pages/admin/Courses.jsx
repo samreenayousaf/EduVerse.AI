@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 import { adminAPI } from "../../services/api";
 import { useThemeMode } from "../../context/ThemeContext";
 
-// ── Empty form templates ───────────────────────────────────────────────
+// ── Empty form templates ──
 const EMPTY_COURSE = {
   title: "", description: "", category: "", level: "Beginner",
   duration: "", price: 0, instructorId: "", instructorName: "",
@@ -29,7 +29,7 @@ export default function AdminCourses() {
   const sub      = isDark ? "#9CA3AF" : "#6B7280";
   const hover    = isDark ? "#374151" : "#F3F4F6";
 
-  // ── State ──────────────────────────────────────────────────────────
+  // ── State ──
   const [courses,      setCourses]      = useState([]);
   const [instructors,  setInstructors]  = useState([]);
   const [loading,      setLoading]      = useState(true);
@@ -45,16 +45,16 @@ export default function AdminCourses() {
 
   // Dialog: Assign Instructor to existing course
   const [assignOpen,   setAssignOpen]   = useState(false);
-  const [assignCourse, setAssignCourse] = useState(null);   // the course being re-assigned
+  const [assignCourse, setAssignCourse] = useState(null);  
   const [assignInstId, setAssignInstId] = useState("");
   const [assigning,    setAssigning]    = useState(false);
 
-  // Dialog: Create New Instructor (quick-add inside course dialog)
+  // Dialog: Create New Instructor 
   const [newInstOpen,  setNewInstOpen]  = useState(false);
   const [instForm,     setInstForm]     = useState(EMPTY_INSTRUCTOR);
   const [creatingInst, setCreatingInst] = useState(false);
 
-  // ── Fetch helpers ──────────────────────────────────────────────────
+  // ── Fetch helpers ──
   const fetchCourses = async () => {
     setLoading(true);
     try {
@@ -84,7 +84,7 @@ export default function AdminCourses() {
     fetchInstructors();
   }, []);
 
-  // ── Status change ──────────────────────────────────────────────────
+  // ── Status change ──
   const handleStatusChange = async (id, status) => {
     setUpdating(p => ({ ...p, [id]: true }));
     try {
@@ -98,7 +98,7 @@ export default function AdminCourses() {
     }
   };
 
-  // ── Create Course ──────────────────────────────────────────────────
+  // ── Create Course ──
   const handleCreateCourse = async () => {
     if (!courseForm.title.trim())       return toast.error("Title is required");
     if (!courseForm.description.trim()) return toast.error("Description is required");
@@ -128,7 +128,7 @@ export default function AdminCourses() {
     }));
   };
 
-  // ── Assign Instructor to existing course ───────────────────────────
+  // ── Assign Instructor to existing course ───
   const openAssignDialog = (course) => {
     setAssignCourse(course);
     setAssignInstId(course.instructorId || "");
@@ -164,7 +164,7 @@ export default function AdminCourses() {
     }
   };
 
-  // ── Quick-create instructor ────────────────────────────────────────
+  // ── Quick-create instructor ───
   const handleCreateInstructor = async () => {
     if (!instForm.name.trim())          return toast.error("Name is required");
     if (!instForm.email.trim())         return toast.error("Email is required");
@@ -185,7 +185,7 @@ export default function AdminCourses() {
     }
   };
 
-  // ── Filter / group ─────────────────────────────────────────────────
+  // ── Filter / group ───
   const filtered = courses.filter(c =>
     (c.title?.toLowerCase().includes(search.toLowerCase()) ||
      c.instructorName?.toLowerCase().includes(search.toLowerCase())) &&
@@ -199,13 +199,13 @@ export default function AdminCourses() {
     byInstructor[n].push(c);
   });
 
-  // ── Shared select styles ───────────────────────────────────────────
+  // ── Shared select styles ───
   const selectSx = {
     bgcolor: surface, color: txt,
     "& .MuiOutlinedInput-notchedOutline": { borderColor: border },
   };
 
-  // ── Render ─────────────────────────────────────────────────────────
+  // ── Render ───
   return (
     <Box>
 

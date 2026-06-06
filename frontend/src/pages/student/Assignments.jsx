@@ -111,17 +111,12 @@ export default function StudentAssignments() {
     </Box>
   );
 
-  // const pending   = assignments.filter(a => !a.mySubmission);
-  // const submitted = assignments.filter(a => a.mySubmission);
 
   return (
     <Box>
       <Typography variant="h5" fontWeight={800} sx={{ mb:1, color: isDark?'#F9FAFB':'#111827' }}>
         Assignments
       </Typography>
-      {/* <Typography sx={{ color:sub, mb:3 }}>
-        {pending.length} pending · {submitted.length} submitted
-      </Typography> */}
 
       {assignments.length === 0 ? (
         <Card sx={{ p:6, textAlign:'center', borderRadius:3, bgcolor:surface,

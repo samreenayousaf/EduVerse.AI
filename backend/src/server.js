@@ -25,7 +25,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// ── Routes ────────────────────────────────────────────────────────────
+// ── Routes ───
 app.use('/api/auth',          require('./routes/authRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/fcm',           require('./routes/fcmRoutes'));
@@ -40,7 +40,7 @@ app.use('/api/analytics',     require('./routes/analyticsRoutes'));
 app.use('/api/ai',            require('./routes/aiRoutes'));
 app.use('/api',               require('./routes/announcementRoutes'));
 
-// ── Health Check ──────────────────────────────────────────────────────
+// ── Health Check ───
 app.get('/api/health', (_, res) => res.json({
   status:    'ok',
   platform:  'EduVerse.AI v3.1',
@@ -54,7 +54,7 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// ── Deadline Reminder Job (runs every 6 hours) ────────────────────────
+// ── Deadline Reminder Job (runs every 6 hours) ──
 try {
   const { scheduleDeadlineReminders } = require('./jobs/deadlineReminder');
   scheduleDeadlineReminders();

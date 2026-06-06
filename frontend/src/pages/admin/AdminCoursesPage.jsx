@@ -1,14 +1,11 @@
-// AdminCoursesPage.jsx
-// NOTE: This is the legacy page. The active admin courses page is Courses.jsx
-// Fixing import paths that were broken (wrong relative paths)
+
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Card, TableContainer, Table, TableHead, TableRow, TableCell,
   TableBody, Avatar, Chip, IconButton, Switch, CircularProgress, TextField, InputAdornment } from '@mui/material';
 import { Search, Delete, Edit } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-// FIX: was `import { adminService } from '../services/api'` — wrong path AND wrong export name
 import { adminAPI } from '../../services/api';
-// FIX: was `import Navbar from '../components/common/Navbar'` — wrong relative path
+
 import Layout from '../../components/common/Layout';
 
 const AdminCoursesPage = () => {
@@ -20,7 +17,7 @@ const AdminCoursesPage = () => {
     setLoading(true);
     try {
       const res = await adminAPI.getCourses();
-      // FIX: was `data.data || []` but backend returns plain array, not { data: [] }
+      
       setCourses(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to load courses');

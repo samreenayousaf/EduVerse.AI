@@ -6,7 +6,7 @@ const initFirebase = () => {
 
   let serviceAccount;
 
-  // Production (Render) - environment variable se
+  // Production (Render) - environment variable 
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
       serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -14,7 +14,7 @@ const initFirebase = () => {
       throw new Error('FIREBASE_SERVICE_ACCOUNT env variable invalid JSON hai');
     }
   }
-  // Development (Local) - file se
+  // Development (Local) 
   else if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
     const path = require('path');
     try {

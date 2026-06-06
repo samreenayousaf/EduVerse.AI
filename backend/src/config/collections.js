@@ -1,4 +1,3 @@
-// Central collection names — change here if needed
 module.exports = {
   USERS:       'users',
   COURSES:     'courses',

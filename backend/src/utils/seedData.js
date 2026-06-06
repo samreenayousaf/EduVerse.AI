@@ -12,14 +12,14 @@ const seed = async () => {
   await connectMongoDB();
   console.log('\n🌱 Setting up EduVerse.AI v3.0 — Hybrid Data...\n');
 
-  // ── Clean MongoDB ─────────────────────────────────────────────────
+  // ── Clean MongoDB ──
   await Course.deleteMany({});
   await Assignment.deleteMany({});
   await Quiz.deleteMany({});
   await Enrollment.deleteMany({});
   console.log('  🧹 MongoDB cleared');
 
-  // ── Clean Firebase Users ──────────────────────────────────────────
+  // ── Clean Firebase Users ──
   const oldIds = ['admin-samreena-001','instructor-bilal-001','instructor-ayesha-001','student-ahmed-001'];
   for (const id of oldIds) await db.collection(COLS.USERS).doc(id).delete().catch(() => {});
   console.log('  🧹 Firebase users cleared\n');

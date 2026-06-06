@@ -19,15 +19,15 @@ exports.getUsers = async (req, res) => {
 // GET /api/admin/instructors  ← NEW: returns only instructor-role users for dropdowns
 exports.getInstructors = async (req, res) => {
   try {
-    // BUG WAS: no such endpoint existed — frontend showed "No instructors found"
+
     const snap = await db
       .collection(COLS.USERS)
-      .where('role', '==', 'instructor')   // filter by role field (correct field name)
+      .where('role', '==', 'instructor')  
       .where('isActive', '==', true)
       .get();
 
     if (snap.empty) {
-      return res.json([]);                  // return empty array, not 404
+      return res.json([]);                  
     }
 
     const instructors = snap.docs.map(d => {
@@ -68,8 +68,6 @@ exports.deleteUser = async (req, res) => {
 };
 
 // GET /api/admin/courses
-// BUG WAS: returned courses but Course model stores instructorId (string) not a ref,
-// so no populate() needed — but instructorName is already embedded. Works correctly.
 exports.getAllCourses = async (req, res) => {
   try {
     const courses = await Course.find().sort({ createdAt: -1 }).lean();
@@ -115,7 +113,7 @@ exports.createInstructor = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// POST /api/admin/courses  ← NEW: admin creates a course and assigns it to an instructor
+// POST /api/admin/courses 
 exports.adminCreateCourse = async (req, res) => {
   try {
     const { title, description, category, level, duration, price, tags,
@@ -160,7 +158,6 @@ exports.adminCreateCourse = async (req, res) => {
 };
 
 // PUT /api/admin/courses/:id/assign-instructor
-// Admin re-assigns a course to a different instructor
 exports.assignInstructor = async (req, res) => {
   try {
     const { instructorId, instructorName } = req.body;
