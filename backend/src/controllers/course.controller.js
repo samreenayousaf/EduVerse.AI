@@ -2,16 +2,14 @@ const Course   = require('../models/Course.model');
 const { db }   = require('../config/firebase');
 const COLS     = require('../config/collections');
 
-// GET /api/courses — students see published, instructors see only assigned, admins see all
+// ── helper: check if user owns or is assigned to course ──────────────
+const canManage = (course, user) =>
+  course.instructorId === user.id || user.role === 'admin';
+
+// GET /api/courses
 exports.getCourses = async (req, res) => {
   try {
-    let filter = {};
-    if (req.user.role === 'student') {
-      filter = { status: 'published' };
-    } else if (req.user.role === 'instructor') {
-      // Instructor sees only courses assigned by admin (assignedInstructors contains their id)
-      filter = { assignedInstructors: req.user.id };
-    }
+    const filter = req.user.role === 'student' ? { status: 'published' } : {};
     const courses = await Course.find(filter).sort({ createdAt: -1 }).lean();
     res.json(courses);
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -21,11 +19,22 @@ exports.getCourses = async (req, res) => {
 exports.searchCourses = async (req, res) => {
   try {
     const q = req.query.q || '';
-    const courses = await Course.find({ status:'published', $or:[
-      { title:{ $regex:q, $options:'i' } },
-      { description:{ $regex:q, $options:'i' } },
-      { tags:{ $regex:q, $options:'i' } },
+    const courses = await Course.find({ status: 'published', $or: [
+      { title:       { $regex: q, $options: 'i' } },
+      { description: { $regex: q, $options: 'i' } },
+      { tags:        { $regex: q, $options: 'i' } },
     ]}).lean();
+    res.json(courses);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+// GET /api/courses/my — instructor sees own + admin-assigned courses
+exports.getInstructorCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({
+      instructorId: req.user.id.trim(),   // trim() safety — whitespace mismatch fix
+    }).sort({ createdAt: -1 }).lean();
+
     res.json(courses);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -39,28 +48,30 @@ exports.getCourse = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// POST /api/courses — instructor or admin creates course
+// POST /api/courses — instructor creates own course
 exports.createCourse = async (req, res) => {
   try {
     const { title, description, category, level, duration, price, tags } = req.body;
     if (!title || !description || !category)
       return res.status(400).json({ message: 'Title, description and category required' });
+
     const defaultWeeks = [
-      { title:'General', weekNumber:0, activities:[] },
-      { title:'Week 1',  weekNumber:1, activities:[] },
-      { title:'Week 2',  weekNumber:2, activities:[] },
-      { title:'Week 3',  weekNumber:3, activities:[] },
+      { title: 'General', weekNumber: 0, activities: [] },
+      { title: 'Week 1',  weekNumber: 1, activities: [] },
+      { title: 'Week 2',  weekNumber: 2, activities: [] },
+      { title: 'Week 3',  weekNumber: 3, activities: [] },
     ];
     const course = await Course.create({
-      title:title.trim(), description, category,
-      level:level||'Beginner', duration:duration||'', price:Number(price)||0,
-      tags:tags||[], instructorId:req.user.id, instructorName:req.user.name,
-      status:'published', weeks:defaultWeeks,
-      assignedInstructors:[req.user.id],
+      title: title.trim(), description, category,
+      level: level || 'Beginner', duration: duration || '',
+      price: Number(price) || 0, tags: tags || [],
+      instructorId:   req.user.id,
+      instructorName: req.user.name,
+      status: 'published', weeks: defaultWeeks,
     });
     await db.collection(COLS.USERS).doc(req.user.id).update({
       createdCourses: require('firebase-admin').firestore.FieldValue.arrayUnion(course._id.toString()),
-    }).catch(()=>{});
+    }).catch(() => {});
     res.status(201).json(course);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -70,8 +81,7 @@ exports.updateCourse = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
     if (!course) return res.status(404).json({ message: 'Not found' });
-    // Instructor must be assigned to this course or be admin
-    if (req.user.role !== 'admin' && !course.assignedInstructors.includes(req.user.id))
+    if (!canManage(course, req.user))
       return res.status(403).json({ message: 'Not authorized' });
     const allowed = ['title','description','category','level','duration','price','status','tags','thumbnail','weeks'];
     allowed.forEach(k => { if (req.body[k] !== undefined) course[k] = req.body[k]; });
@@ -85,24 +95,10 @@ exports.deleteCourse = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
     if (!course) return res.status(404).json({ message: 'Not found' });
-    if (req.user.role !== 'admin' && !course.assignedInstructors.includes(req.user.id))
+    if (!canManage(course, req.user))
       return res.status(403).json({ message: 'Not authorized' });
     await course.deleteOne();
     res.json({ message: 'Deleted' });
-  } catch (err) { res.status(500).json({ message: err.message }); }
-};
-
-// GET /api/courses/my — instructor: only assigned courses
-exports.getInstructorCourses = async (req, res) => {
-  try {
-    let filter;
-    if (req.user.role === 'admin') {
-      filter = {}; // admin sees all
-    } else {
-      filter = { assignedInstructors: req.user.id };
-    }
-    const courses = await Course.find(filter).sort({ createdAt:-1 }).lean();
-    res.json(courses);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -110,11 +106,11 @@ exports.getInstructorCourses = async (req, res) => {
 exports.addWeek = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
-    if (!course) return res.status(404).json({ message:'Not found' });
-    if (req.user.role !== 'admin' && !course.assignedInstructors.includes(req.user.id))
-      return res.status(403).json({ message:'Not authorized' });
+    if (!course) return res.status(404).json({ message: 'Not found' });
+    if (!canManage(course, req.user))
+      return res.status(403).json({ message: 'Not authorized' });
     const weekNum = course.weeks.length;
-    course.weeks.push({ title: req.body.title || `Week ${weekNum}`, weekNumber: weekNum, activities:[] });
+    course.weeks.push({ title: req.body.title || `Week ${weekNum}`, weekNumber: weekNum, activities: [] });
     await course.save();
     res.json(course);
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -124,22 +120,24 @@ exports.addWeek = async (req, res) => {
 exports.addActivity = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
-    if (!course) return res.status(404).json({ message:'Not found' });
-    if (req.user.role !== 'admin' && !course.assignedInstructors.includes(req.user.id))
-      return res.status(403).json({ message:'Not authorized' });
+    if (!course) return res.status(404).json({ message: 'Not found' });
+    if (!canManage(course, req.user))
+      return res.status(403).json({ message: 'Not authorized' });
     const week = course.weeks.id(req.params.weekId);
-    if (!week) return res.status(404).json({ message:'Week not found' });
+    if (!week) return res.status(404).json({ message: 'Week not found' });
     const { type, title, content, fileUrl, fileName, fileSize, duration, isFree, refId, openDate, closeDate } = req.body;
-    week.activities.push({ type, title, content:content||'', fileUrl:fileUrl||'',
-      fileName:fileName||'', fileSize:fileSize||'', duration:duration||'',
-      isFree:!!isFree, refId:refId||'', openDate:openDate||null, closeDate:closeDate||null,
-      order: week.activities.length });
+    week.activities.push({
+      type, title, content: content || '', fileUrl: fileUrl || '',
+      fileName: fileName || '', fileSize: fileSize || '', duration: duration || '',
+      isFree: !!isFree, refId: refId || '', openDate: openDate || null, closeDate: closeDate || null,
+      order: week.activities.length,
+    });
     await course.save();
     try {
       const { sendCourseNotification } = require('./fcm.controller');
       await sendCourseNotification(course._id.toString(), {
-        title:`New Content: ${course.title}`,
-        body:`"${title}" added to ${week.title}`,
+        title: `New Content: ${course.title}`,
+        body:  `"${title}" added to ${week.title}`,
       });
     } catch {}
     res.json(course);
@@ -150,13 +148,13 @@ exports.addActivity = async (req, res) => {
 exports.deleteActivity = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
-    if (!course) return res.status(404).json({ message:'Not found' });
-    if (req.user.role !== 'admin' && !course.assignedInstructors.includes(req.user.id))
-      return res.status(403).json({ message:'Not authorized' });
+    if (!course) return res.status(404).json({ message: 'Not found' });
+    if (!canManage(course, req.user))
+      return res.status(403).json({ message: 'Not authorized' });
     const week = course.weeks.id(req.params.weekId);
-    if (!week) return res.status(404).json({ message:'Week not found' });
+    if (!week) return res.status(404).json({ message: 'Week not found' });
     week.activities.pull({ _id: req.params.actId });
     await course.save();
-    res.json({ message:'Deleted' });
+    res.json({ message: 'Deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
